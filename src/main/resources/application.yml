@@ -1,1 +1,20 @@
-spring.application.name=DoAnWeb
+spring:
+  application:
+    name: Personal Habit Tracker
+  
+  datasource:
+    url: jdbc:mysql://localhost:3306/habit_tracker_db?useSSL=false&serverTimezone=UTC
+    username: root
+    password: 
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  thymeleaf:
+    cache: false
