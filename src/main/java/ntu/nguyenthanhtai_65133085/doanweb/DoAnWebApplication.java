@@ -1,4 +1,4 @@
-package vidu.ntu65133085.nguyenthanhtai_doanweb;
+package ntu.nguyenthanhtai_65133085.doanweb;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
