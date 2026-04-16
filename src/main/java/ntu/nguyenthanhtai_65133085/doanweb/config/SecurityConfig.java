@@ -2,6 +2,8 @@ package ntu.nguyenthanhtai_65133085.doanweb.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,14 +18,15 @@ public class SecurityConfig {
 	}
 
 	@Bean
+	public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+			throws Exception {
+		return authenticationConfiguration.getAuthenticationManager();
+	}
+
+	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		http.csrf(csrf -> csrf.disable()) // Tắt bảo vệ CSRF tạm thời để dễ dàng test API qua Postman
-				.authorizeHttpRequests(auth -> auth.requestMatchers("/api/users/register").permitAll() // Mở cửa hoàn
-																										// toàn tự do
-																										// cho API đăng
-																										// ký
-						.anyRequest().authenticated() // Tất cả các API khác đều bắt buộc phải đăng nhập
-				);
+		http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(auth -> auth
+				.requestMatchers("/api/users/register", "/api/users/login").permitAll().anyRequest().authenticated());
 		return http.build();
 	}
 }
