@@ -9,6 +9,5 @@ import ntu.nguyenthanhtai_65133085.doanweb.entity.Habit;
 
 @Repository
 public interface HabitRepository extends JpaRepository<Habit, Long> {
-
 	List<Habit> findByUserId(Long userId);
 }

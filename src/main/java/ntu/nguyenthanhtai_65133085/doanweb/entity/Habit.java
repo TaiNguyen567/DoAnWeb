@@ -1,7 +1,5 @@
 package ntu.nguyenthanhtai_65133085.doanweb.entity;
 
-import java.time.LocalDateTime;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -10,7 +8,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -27,24 +24,16 @@ public class Habit {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@Column(nullable = false)
+	private String name;
+
+	private String description;
+
+	// Mục tiêu (ví dụ: cần làm 3 lần/tuần thì goal = 3)
+	private int goal;
+
+	// Mối quan hệ: Nhiều Thói quen (Many) thuộc về 1 Người dùng (One)
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)
 	private User user;
-
-	@Column(nullable = false, length = 100)
-	private String name;
-
-	@Column(columnDefinition = "TEXT")
-	private String description;
-
-	@Column(name = "goal_days_per_week")
-	private Integer goalDaysPerWeek;
-
-	@Column(name = "created_at", updatable = false)
-	private LocalDateTime createdAt;
-
-	@PrePersist
-	protected void onCreate() {
-		this.createdAt = LocalDateTime.now();
-	}
 }
