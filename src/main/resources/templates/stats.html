@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Thống kê')}"></head>
+<body>
+
+<nav th:replace="~{layout :: navbar(${username})}"></nav>
+
+<div class="container pb-5">
+
+    <h4 class="fw-bold mb-4">
+        <i class="bi bi-bar-chart-fill me-2" style="color:#667eea;"></i>Thống kê thói quen
+    </h4>
+
+    <!-- Không có thói quen -->
+    <div th:if="${statsList.empty}" class="card text-center py-5">
+        <div class="card-body text-muted">
+            <i class="bi bi-bar-chart display-3"></i>
+            <p class="mt-3">Chưa có thói quen nào để thống kê.</p>
+            <a href="/dashboard" class="btn btn-primary">Tạo thói quen ngay</a>
+        </div>
+    </div>
+
+    <!-- Danh sách thống kê từng habit -->
+    <div class="row g-4" th:if="${!statsList.empty}">
+        <div class="col-12" th:each="stats : ${statsList}">
+            <div class="card">
+                <div class="card-body">
+
+                    <!-- Header -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h5 class="fw-bold mb-0" th:text="${stats.habitName}">Tên thói quen</h5>
+                            <span class="text-muted small">Mục tiêu: <span th:text="${stats.goal}">7</span> ngày/tuần</span>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <span class="streak-badge">🔥 Streak: <span th:text="${stats.currentStreak}">0</span> ngày</span>
+                            <span th:if="${stats.longestStreak > 0}"
+                                  class="badge bg-warning text-dark">
+                                🏆 Best: <span th:text="${stats.longestStreak}">0</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Progress bar tỉ lệ hoàn thành -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="small fw-semibold">Tỉ lệ hoàn thành</span>
+                            <span class="small fw-bold" th:text="${stats.completionRate} + '%'">0%</span>
+                        </div>
+                        <div class="progress" style="height: 10px; border-radius: 10px;">
+                            <div class="progress-bar"
+                                 th:style="'width: ' + ${stats.completionRate} + '%; background: linear-gradient(135deg,#667eea,#764ba2);'"
+                                 role="progressbar"></div>
+                        </div>
+                    </div>
+
+                    <!-- Số liệu chi tiết -->
+                    <div class="row g-2 text-center">
+                        <div class="col-4">
+                            <div class="bg-light rounded p-2">
+                                <div class="fw-bold fs-5" th:text="${stats.totalCheckins}">0</div>
+                                <div class="text-muted" style="font-size:0.75rem;">Tổng check-in</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="bg-success bg-opacity-10 rounded p-2">
+                                <div class="fw-bold fs-5 text-success" th:text="${stats.completedCheckins}">0</div>
+                                <div class="text-muted" style="font-size:0.75rem;">Hoàn thành</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="bg-warning bg-opacity-10 rounded p-2">
+                                <div class="fw-bold fs-5 text-warning" th:text="${stats.skippedCheckins}">0</div>
+                                <div class="text-muted" style="font-size:0.75rem;">Bỏ qua</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <a th:href="@{/habits/{id}(id=${stats.habitId})}"
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-arrow-right me-1"></i>Xem chi tiết
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div th:replace="~{layout :: scripts}"></div>
+</body>
+</html>

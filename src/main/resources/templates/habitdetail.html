@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Chi tiết thói quen')}"></head>
+<body>
+
+<nav th:replace="~{layout :: navbar(${username})}"></nav>
+
+<div class="container pb-5">
+
+    <div class="mb-3">
+        <a href="/dashboard" class="text-decoration-none text-muted">
+            <i class="bi bi-arrow-left me-1"></i>Quay lại Dashboard
+        </a>
+    </div>
+
+    <!-- Flash message -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+        <i class="bi bi-check-circle me-1"></i><span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Tiêu đề habit -->
+    <div class="card mb-4">
+        <div class="card-body d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="fw-bold mb-1" th:text="${habit.name}">Tên thói quen</h4>
+                <p class="text-muted mb-0" th:text="${habit.description} ?: 'Không có mô tả'"></p>
+            </div>
+            <span class="badge bg-primary fs-6">
+                <i class="bi bi-bullseye me-1"></i>Mục tiêu: <span th:text="${habit.goal}">7</span> ngày
+            </span>
+        </div>
+    </div>
+
+    <!-- Thống kê nhanh -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card stat-card">
+                <div class="stat-number text-success" th:text="${stats.completedCheckins}">0</div>
+                <div class="text-muted small">Hoàn thành</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card stat-card">
+                <div class="stat-number" th:text="${stats.completionRate} + '%'">0%</div>
+                <div class="text-muted small">Tỉ lệ</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card stat-card">
+                <div class="stat-number text-warning" th:text="${stats.currentStreak}">0</div>
+                <div class="text-muted small">🔥 Streak hiện tại</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card stat-card">
+                <div class="stat-number text-danger" th:text="${stats.longestStreak}">0</div>
+                <div class="text-muted small">🏆 Streak dài nhất</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- Form check-in -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header fw-bold py-3" style="background: linear-gradient(135deg,#667eea,#764ba2); color:white;">
+                    <i class="bi bi-calendar-check me-1"></i>Check-in hôm nay
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/habits/{id}/checkins(id=${habit.id})}" method="post"
+                          th:object="${checkinRequest}">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Ngày</label>
+                            <input type="date" th:field="*{checkinDate}" class="form-control"
+                                   th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}"/>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Trạng thái</label>
+                            <select th:field="*{status}" class="form-select">
+                                <option value="COMPLETED">✅ Hoàn thành</option>
+                                <option value="SKIPPED">⏭️ Bỏ qua</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Ghi chú</label>
+                            <textarea th:field="*{notes}" class="form-control" rows="2"
+                                      placeholder="Nhận xét của bạn hôm nay..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-check2 me-1"></i>Xác nhận check-in
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lịch sử check-in -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header fw-bold py-3">
+                    <i class="bi bi-clock-history me-1"></i>Lịch sử check-in
+                    <span class="badge bg-secondary ms-2" th:text="${checkins.size()}">0</span>
+                </div>
+                <div class="card-body p-0">
+
+                    <div th:if="${checkins.empty}" class="text-center py-5 text-muted">
+                        <i class="bi bi-calendar-x display-4"></i>
+                        <p class="mt-2">Chưa có lần check-in nào.</p>
+                    </div>
+
+                    <div class="list-group list-group-flush" th:if="${!checkins.empty}">
+                        <div class="list-group-item py-3" th:each="checkin : ${checkins}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span th:if="${checkin.status == 'COMPLETED'}"
+                                          class="badge bg-success me-2">✅ Hoàn thành</span>
+                                    <span th:if="${checkin.status == 'SKIPPED'}"
+                                          class="badge bg-warning text-dark me-2">⏭️ Bỏ qua</span>
+                                    <span class="fw-semibold" th:text="${checkin.checkinDate}"></span>
+                                </div>
+                            </div>
+                            <p class="text-muted small mb-0 mt-1"
+                               th:if="${checkin.notes}" th:text="${checkin.notes}"></p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{layout :: scripts}"></div>
+</body>
+</html>

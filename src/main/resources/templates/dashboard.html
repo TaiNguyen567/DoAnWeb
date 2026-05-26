@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Dashboard')}"></head>
+<body>
+
+<nav th:replace="~{layout :: navbar(${username})}"></nav>
+
+<div class="container pb-5">
+
+    <!-- Flash message -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+        <i class="bi bi-check-circle me-1"></i><span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- Cột trái: Form tạo thói quen mới -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white fw-bold py-3">
+                    <i class="bi bi-plus-circle me-1"></i>Tạo thói quen mới
+                </div>
+                <div class="card-body">
+                    <form action="/habits" method="post" th:object="${habitRequest}">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Tên thói quen <span class="text-danger">*</span></label>
+                            <input type="text" th:field="*{name}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'"
+                                   placeholder="VD: Đọc sách, Tập thể dục..."/>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Mô tả</label>
+                            <textarea th:field="*{description}" class="form-control" rows="2"
+                                      placeholder="Mô tả ngắn về thói quen..."></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Mục tiêu (ngày/tuần) <span class="text-danger">*</span></label>
+                            <input type="number" th:field="*{goal}"
+                                   class="form-control" th:classappend="${#fields.hasErrors('goal')} ? 'is-invalid'"
+                                   min="1" max="7" placeholder="VD: 7"/>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('goal')}" th:errors="*{goal}"></div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-plus-lg me-1"></i>Tạo thói quen
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột phải: Danh sách thói quen -->
+        <div class="col-lg-8">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-list-check me-1"></i>Thói quen của bạn
+                <span class="badge bg-secondary ms-2" th:text="${habits.size()}">0</span>
+            </h5>
+
+            <!-- Không có thói quen nào -->
+            <div th:if="${habits.empty}" class="card text-center py-5">
+                <div class="card-body">
+                    <i class="bi bi-inbox display-3 text-muted"></i>
+                    <p class="mt-3 text-muted">Bạn chưa có thói quen nào. Hãy tạo thói quen đầu tiên!</p>
+                </div>
+            </div>
+
+            <!-- Danh sách habit -->
+            <div class="row g-3">
+                <div class="col-md-6" th:each="habit : ${habits}">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <h6 class="fw-bold mb-1" th:text="${habit.name}">Tên thói quen</h6>
+                                <span class="badge bg-light text-dark border">
+                                    <i class="bi bi-bullseye me-1"></i>
+                                    <span th:text="${habit.goal}">7</span> ngày
+                                </span>
+                            </div>
+                            <p class="text-muted small mb-3"
+                               th:text="${habit.description} ?: 'Không có mô tả'"
+                               th:classappend="${habit.description == null} ? 'fst-italic'"></p>
+
+                            <div class="d-flex gap-2">
+                                <a th:href="@{/habits/{id}(id=${habit.id})}"
+                                   class="btn btn-sm btn-outline-primary flex-grow-1">
+                                    <i class="bi bi-eye me-1"></i>Chi tiết
+                                </a>
+                                <form th:action="@{/habits/{id}/delete(id=${habit.id})}" method="post"
+                                      onsubmit="return confirm('Xác nhận xóa thói quen này?')">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{layout :: scripts}"></div>
+</body>
+</html>
