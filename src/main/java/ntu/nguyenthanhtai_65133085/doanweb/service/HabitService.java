@@ -9,4 +9,8 @@ public interface HabitService {
 	HabitDTO createHabit(HabitRequestDTO habitRequestDTO, String username);
 
 	List<HabitDTO> getAllHabitsByUser(String username);
+
+	HabitDTO updateHabit(Long habitId, HabitRequestDTO habitRequestDTO, String username); // ← thêm
+
+	void deleteHabit(Long habitId, String username); // ← thêm
 }
