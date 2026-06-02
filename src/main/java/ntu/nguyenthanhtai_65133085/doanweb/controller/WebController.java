@@ -1,5 +1,7 @@
 package ntu.nguyenthanhtai_65133085.doanweb.controller;
 
+import java.util.List;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,6 +16,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import ntu.nguyenthanhtai_65133085.doanweb.dto.HabitCheckinRequestDTO;
 import ntu.nguyenthanhtai_65133085.doanweb.dto.HabitRequestDTO;
+import ntu.nguyenthanhtai_65133085.doanweb.dto.HabitStatsDTO;
 import ntu.nguyenthanhtai_65133085.doanweb.dto.UserRegisterDTO;
 import ntu.nguyenthanhtai_65133085.doanweb.exception.ResourceAlreadyExistsException;
 import ntu.nguyenthanhtai_65133085.doanweb.service.HabitCheckinService;
@@ -30,8 +33,6 @@ public class WebController {
 	private final HabitCheckinService habitCheckinService;
 	private final HabitStatsService habitStatsService;
 
-	// ==================== AUTH ====================
-
 	@GetMapping("/login")
 	public String loginPage() {
 		return "login";
@@ -45,13 +46,12 @@ public class WebController {
 
 	@PostMapping("/register")
 	public String handleRegister(@Valid @ModelAttribute("registerDTO") UserRegisterDTO dto, BindingResult result,
-			Model model, RedirectAttributes redirectAttributes) {
-		if (result.hasErrors()) {
+			Model model, RedirectAttributes ra) {
+		if (result.hasErrors())
 			return "register";
-		}
 		try {
 			userService.registerUser(dto);
-			redirectAttributes.addFlashAttribute("success", "Đăng ký thành công! Hãy đăng nhập.");
+			ra.addFlashAttribute("success", "Đăng ký thành công! Hãy đăng nhập.");
 			return "redirect:/login";
 		} catch (ResourceAlreadyExistsException e) {
 			model.addAttribute("error", e.getMessage());
@@ -59,31 +59,31 @@ public class WebController {
 		}
 	}
 
-	// ==================== DASHBOARD ====================
-
 	@GetMapping({ "/", "/dashboard" })
 	public String dashboard(Model model, Authentication auth) {
 		String username = auth.getName();
 		model.addAttribute("habits", habitService.getAllHabitsByUser(username));
 		model.addAttribute("habitRequest", new HabitRequestDTO());
+		model.addAttribute("weekDays", habitStatsService.getThisWeekView(username));
+		model.addAttribute("statsList", habitStatsService.getAllStatsForUser(username));
 		model.addAttribute("username", username);
 		return "dashboard";
 	}
 
 	@PostMapping("/habits")
 	public String createHabit(@Valid @ModelAttribute("habitRequest") HabitRequestDTO dto, BindingResult result,
-			Authentication auth, Model model, RedirectAttributes redirectAttributes) {
+			Authentication auth, Model model, RedirectAttributes ra) {
 		if (result.hasErrors()) {
 			model.addAttribute("habits", habitService.getAllHabitsByUser(auth.getName()));
+			model.addAttribute("weekDays", habitStatsService.getThisWeekView(auth.getName()));
+			model.addAttribute("statsList", habitStatsService.getAllStatsForUser(auth.getName()));
 			model.addAttribute("username", auth.getName());
 			return "dashboard";
 		}
 		habitService.createHabit(dto, auth.getName());
-		redirectAttributes.addFlashAttribute("success", "Tạo thói quen thành công!");
+		ra.addFlashAttribute("success", "Tạo thói quen thành công!");
 		return "redirect:/dashboard";
 	}
-
-	// ==================== HABIT DETAIL ====================
 
 	@GetMapping("/habits/{id}")
 	public String habitDetail(@PathVariable Long id, Model model, Authentication auth) {
@@ -97,31 +97,43 @@ public class WebController {
 		return "habit-detail";
 	}
 
+	// Cập nhật hàm createCheckin trong WebController.java
 	@PostMapping("/habits/{id}/checkins")
 	public String createCheckin(@PathVariable Long id,
 			@Valid @ModelAttribute("checkinRequest") HabitCheckinRequestDTO dto, BindingResult result,
-			Authentication auth, RedirectAttributes redirectAttributes) {
+			Authentication auth, RedirectAttributes ra) {
 		if (!result.hasErrors()) {
-			habitCheckinService.checkin(id, dto, auth.getName());
-			redirectAttributes.addFlashAttribute("success", "Check-in thành công!");
+			try {
+				habitCheckinService.checkin(id, dto, auth.getName());
+				ra.addFlashAttribute("success", "Check-in thành công!");
+			} catch (ResourceAlreadyExistsException e) {
+				// Bắt lỗi trùng ngày và gửi thông báo lỗi sang giao diện
+				ra.addFlashAttribute("error", e.getMessage());
+			}
+		} else {
+			ra.addFlashAttribute("error", "Dữ liệu check-in không hợp lệ.");
 		}
 		return "redirect:/habits/" + id;
 	}
 
 	@PostMapping("/habits/{id}/delete")
-	public String deleteHabit(@PathVariable Long id, Authentication auth, RedirectAttributes redirectAttributes) {
+	public String deleteHabit(@PathVariable Long id, Authentication auth, RedirectAttributes ra) {
 		habitService.deleteHabit(id, auth.getName());
-		redirectAttributes.addFlashAttribute("success", "Đã xóa thói quen.");
+		ra.addFlashAttribute("success", "Đã xóa thói quen.");
 		return "redirect:/dashboard";
 	}
-
-	// ==================== STATS ====================
 
 	@GetMapping("/stats")
 	public String statsPage(Model model, Authentication auth) {
 		String username = auth.getName();
-		model.addAttribute("statsList", habitStatsService.getAllStatsForUser(username));
-		model.addAttribute("username", username);
+		List<HabitStatsDTO> statsList = habitStatsService.getAllStatsForUser(username);
+
+		// Tính max streak ở đây thay vì trong HTML
+		int maxStreak = statsList.stream().mapToInt(HabitStatsDTO::getCurrentStreak).max().orElse(0); // Nếu list rỗng
+																										// thì trả về 0
+
+		model.addAttribute("statsList", statsList);
+		model.addAttribute("maxStreak", maxStreak); // Truyền giá trị đã tính vào model
 		return "stats";
 	}
 }
